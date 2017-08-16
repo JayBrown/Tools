@@ -12,6 +12,9 @@ else
   SHORT=false
 fi
 DATE_INPUT="$@"
+if [[ "$DATE_INPUT" == "today" ]] || [[ "$DATE_INPUT" == "now" ]] ; then
+	DATE_INPUT=$(/bin/date +'%Y %m %d')
+fi
 WEEKDAY=$(/bin/date -f '%Y %m %d' -j "$DATE_INPUT" +%a)
 if $SHORT ; then
   ROMAN_DAY=$(dies -i -s -v "$WEEKDAY")
@@ -24,5 +27,6 @@ if $SHORT ; then
 elif $LONG ; then
   ROMAN_DATE=$(RomanDate --args words=complete $(echo "$STD_DATE"))
 fi
-echo "$ROMAN_DAY $ROMAN_DATE"
+echo "$ROMAN_DAY $ROMAN_DATE" | sed 's/Condida$/Condita/'
 }
+
