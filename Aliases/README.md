@@ -4,6 +4,7 @@
 
 # Command Line Tools: Aliases <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 
+* auc
 * ipfadd
 * ipfsd
 * ipftype
