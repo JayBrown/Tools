@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # dies
-# v1.0
+# v1.0.1
 # (C) 2017 Joss Brown
 # Shell script utility to convert English to Latin weekday names
 
 LANG=en_US.UTF-8
 
-VERSION="1.0"
+VERSION="1.0.1"
 DATE="2017.08"
 
 echoerr() {
@@ -69,50 +69,8 @@ usage() {
 
 }
 
-SHORT=false
-UPPER=false
-J2I=false
-U2V=false
+daycheck () {
 
-while :; do
-    case $1 in
-    	-h|-\?|--help)
-			usage
-			;;
-    	-i|--j2i)
-			J2I=true
-			;;
-    	-s|--short)
-			SHORT=true
-			;;
-		-u|--upper)
-			UPPER=true
-			;;
-		-v|--u2v)
-			U2V=true
-			;;
-		-V|--version)
-			echo "$VERSION ($DATE)"
-			exit 0
-			;;
-		--)
-			shift
-			break
-			;;
-		-?*)
-     		echoerr "Error: invalid option: $1"
-     		echoerr ""
-      		usage
-    		;;
-    	*)
-    		break
-	esac
-	shift
-done
-
-[[ $# == 0 ]] && echoerr "Error: dies requires a weekday string." && echoerr "" && usage
-
-while :; do
     case $1 in
 		Sunday|Sun.|Sun|Su|U|0)
 			if ! $SHORT ; then
@@ -259,5 +217,67 @@ while :; do
     	*)
     		break
 	esac
+
+}
+
+SHORT=false
+UPPER=false
+J2I=false
+U2V=false
+
+while :; do
+    case $1 in
+    	-h|-\?|--help)
+			usage
+			;;
+    	-i|--j2i)
+			J2I=true
+			;;
+    	-s|--short)
+			SHORT=true
+			;;
+		-u|--upper)
+			UPPER=true
+			;;
+		-v|--u2v)
+			U2V=true
+			;;
+		-V|--version)
+			echo "$VERSION ($DATE)"
+			exit 0
+			;;
+		--)
+			shift
+			break
+			;;
+		-?*)
+     		echoerr "Error: invalid option: $1"
+     		echoerr ""
+      		usage
+    		;;
+    	*)
+    		break
+	esac
 	shift
+done
+
+[[ $# == 0 ]] && echoerr "Error: dies requires a weekday string." && echoerr "" && usage
+
+while :; do
+
+	if [[ $1 == "today" ]] || [[ $1 == "now" ]] ; then
+		DAY=$(/bin/date +%w)
+		daycheck $DAY
+	elif [[ $1 == "tomorrow" ]] ; then
+		DAY=$(/bin/date -j -v+1d +%w)
+		daycheck $DAY
+	elif [[ $1 == "yesterday" ]] ; then
+		DAY=$(/bin/date -j -v-1d +%w)
+		daycheck $DAY
+	else
+		daycheck $1
+	fi
+
+	shift
+
 done
