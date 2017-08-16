@@ -22,7 +22,7 @@ MAIN OPTIONS
 		Print output in uppercase, e.g. 'DIES SOLIS' or 'MAR'
 
 	-v, --u2v
-		Print 'U' instead of 'V', e.g. 'SATVRNI' instead of 'SATURNI'
+		Print 'V' instead of 'U', e.g. 'SATVRNI' instead of 'SATURNI'
 		This option is ignored in lowercase.
 
 ADDITIONAL OPTIONS
