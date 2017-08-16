@@ -53,6 +53,8 @@ usage() {
 	echo -e "\t\tTuesday | Tues. | Tues | Tue. | Tue | Tu | T | 2"
 	echo -e "\t\tet cetera"
 	echo ""
+	echo -e "\t\tdies also accepts: today | now | yesterday | tomorrow"
+	echo ""
 	echo "EXAMPLES"
 	echo -e "\tdies 6"
 	echo -e "\tdies -u Sunday"

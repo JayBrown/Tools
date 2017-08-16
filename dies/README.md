@@ -4,12 +4,12 @@
 
 # Command Line Tools: dies <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-dies v1.0 (2017.08) by Joss Brown
+dies v1.0.1 (2017.08) by Joss Brown
 Shell script utility to convert English to Latin weekday names
 
 USAGE
 	dies [-i | -s | -u | -v] <WEEKDAY>
-	dies [-h | -V]
+	alis [-h | -V]
 
 MAIN OPTIONS
 	-i, --j2i
@@ -38,6 +38,8 @@ FORMATS
 		Monday | Mon. | Mon | Mo | M | 1
 		Tuesday | Tues. | Tues | Tue. | Tue | Tu | T | 2
 		et cetera
+
+		dies also accepts: today | now | yesterday | tomorrow
 
 EXAMPLES
 	dies 6
