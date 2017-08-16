@@ -9,7 +9,7 @@ Shell script utility to convert English to Latin weekday names
 
 USAGE
 	dies [-i | -s | -u | -v] <WEEKDAY>
-	alis [-h | -V]
+	dies [-h | -V]
 
 MAIN OPTIONS
 	-i, --j2i
