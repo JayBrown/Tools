@@ -36,7 +36,7 @@ usage() {
 	echo -e "\t\tPrint output in uppercase, e.g. 'DIES SOLIS' or 'MAR'"
 	echo ""
 	echo -e "\t-v, --u2v"
-	echo -e "\t\tPrint 'U' instead of 'V', e.g. 'SATVRNI' instead of 'SATURNI'"
+	echo -e "\t\tPrint 'V' instead of 'U', e.g. 'SATVRNI' instead of 'SATURNI'"
 	echo -e "\t\tThis option is ignored in lowercase."
 	echo ""
 	echo "ADDITIONAL OPTIONS"
