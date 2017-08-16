@@ -1,0 +1,263 @@
+#!/bin/bash
+
+# dies
+# v1.0
+# (C) 2017 Joss Brown
+# Shell script utility to convert English to Latin weekday names
+
+LANG=en_US.UTF-8
+
+VERSION="1.0"
+DATE="2017.08"
+
+echoerr() {
+
+	echo "$1" 1>&2
+
+}
+
+usage() {
+
+	echo "dies v$VERSION ($DATE) by Joss Brown"
+	echo "Shell script utility to convert English to Latin weekday names"
+	echo ""
+	echo "USAGE"
+	echo -e "\tdies [-i | -s | -u | -v] <WEEKDAY>"
+	echo -e "\talis [-h | -V]"
+	echo ""
+	echo "MAIN OPTIONS"
+	echo -e "\t-i, --j2i"
+	echo -e "\t\tPrint 'I' instead of 'J', i.e. 'Iovis' instead of 'Jovis'"
+	echo ""
+	echo -e "\t-s, --short"
+	echo -e "\t\tPrint short-form names, e.g. 'Mar' instead of 'dies Martis'"
+	echo ""
+	echo -e "\t-u, --upper"
+	echo -e "\t\tPrint output in uppercase, e.g. 'DIES SOLIS' or 'MAR'"
+	echo ""
+	echo -e "\t-v, --u2v"
+	echo -e "\t\tPrint 'U' instead of 'V', e.g. 'SATVRNI' instead of 'SATURNI'"
+	echo -e "\t\tThis option is ignored in lowercase."
+	echo ""
+	echo "ADDITIONAL OPTIONS"
+	echo -e "\t-h, --help"
+	echo -e "\t\tThis help page"
+	echo ""
+	echo -e "\t-V, --version"
+	echo -e "\t\tVersion number and release date"
+	echo ""
+	echo "FORMATS"
+	echo -e "\tUse the following conventions for the days of the week:"
+	echo -e "\t\tSunday | Sun. | Sun | Su | U | 0"
+	echo -e "\t\tMonday | Mon. | Mon | Mo | M | 1"
+	echo -e "\t\tTuesday | Tues. | Tues | Tue. | Tue | Tu | T | 2"
+	echo -e "\t\tet cetera"
+	echo ""
+	echo "EXAMPLES"
+	echo -e "\tdies 6"
+	echo -e "\tdies -u Sunday"
+	echo -e "\tdies -s -i Thu"
+	echo -e "\tdies -u -i -v U M T W R F S"
+	echo -e "\tdies \$(date +%w)"
+	echo -e "\tdate -f '%Y %m %d' -j \"1969 07 20\" +%a | xargs -I {} dies -u -s -i -v {}"
+	echo ""
+	echo -e "\tRegarding numeral input, dies presupposes the %w option (GNU & BSD date) with Sunday as '0'"
+	echo ""
+	echo -e "\tTo avoid the printing of negative results and errors, redirect stderr to /dev/null:"
+	echo -e "\tdies <WEEKDAY> 2>/dev/null"
+	exit 0
+
+}
+
+SHORT=false
+UPPER=false
+J2I=false
+U2V=false
+
+while :; do
+    case $1 in
+    	-h|-\?|--help)
+			usage
+			;;
+    	-i|--j2i)
+			J2I=true
+			;;
+    	-s|--short)
+			SHORT=true
+			;;
+		-u|--upper)
+			UPPER=true
+			;;
+		-v|--u2v)
+			U2V=true
+			;;
+		-V|--version)
+			echo "$VERSION ($DATE)"
+			exit 0
+			;;
+		--)
+			shift
+			break
+			;;
+		-?*)
+     		echoerr "Error: invalid option: $1"
+     		echoerr ""
+      		usage
+    		;;
+    	*)
+    		break
+	esac
+	shift
+done
+
+[[ $# == 0 ]] && echoerr "Error: dies requires a weekday string." && echoerr "" && usage
+
+while :; do
+    case $1 in
+		Sunday|Sun.|Sun|Su|U|0)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					echo "DIES SOLIS"
+				else
+					echo "dies Solis"
+				fi
+			else
+				if $UPPER ; then
+					echo "SOL"
+				else
+					echo "Sol"
+				fi
+			fi
+			;;
+		Monday|Mon.|Mon|Mo|M|1)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					if $U2V ; then
+						echo "DIES LVNAE"
+					else
+						echo "DIES LUNAE"
+					fi
+				else
+					echo "dies Lunae"
+				fi
+			else
+				if $UPPER ; then
+					if $U2V ; then
+						echo "LVN"
+					else
+						echo "LUN"
+					fi
+				else
+					echo "Lun"
+				fi
+			fi
+			;;
+		Tuesday|Tues.|Tues|Tue.|Tue|Tu|T|2)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					echo "DIES MARTIS"
+				else
+					echo "dies Martis"
+				fi
+			else
+				if $UPPER ; then
+					echo "MAR"
+				else
+					echo "Mar"
+				fi
+			fi
+			;;
+		Wednesday|Wed.|Wed|We|W|3)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					if $U2V ; then
+						echo "DIES MERCVRII"
+					else
+						echo "DIES MERCURII"
+					fi
+				else
+					echo "dies Mercurii"
+				fi
+			else
+				if $UPPER ; then
+					echo "MER"
+				else
+					echo "Mer"
+				fi
+			fi
+			;;
+		Thursday|Thurs.|Thurs|Thur.|Thur|Thu.|Thu|Th|R|4)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					if $J2I ; then
+						echo "DIES IOVIS"
+					else
+						echo "DIES JOVIS"
+					fi
+				else
+					if $J2I ; then
+						echo "dies Iovis"
+					else
+						echo "dies Jovis"
+					fi
+				fi
+			else
+				if $UPPER ; then
+					if $J2I ; then
+						echo "IOV"
+					else
+						echo "JOV"
+					fi
+				else
+					if $J2I ; then
+						echo "Iov"
+					else
+						echo "Jov"
+					fi
+				fi
+			fi
+			;;
+		Friday|Fri.|Fri|Fr|F|5)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					echo "DIES VENERIS"
+				else
+					echo "dies Veneris"
+				fi
+			else
+				if $UPPER ; then
+					echo "VEN"
+				else
+					echo "Ven"
+				fi
+			fi
+			;;
+		Saturday|Sat.|Sat|Sa|S|6)
+			if ! $SHORT ; then
+				if $UPPER ; then
+					if $U2V ; then
+						echo "DIES SATVRNI"
+					else
+						echo "DIES SATURNI"
+					fi
+				else
+					echo "dies Saturni"
+				fi
+			else
+				if $UPPER ; then
+					echo "SAT"
+				else
+					echo "Sat"
+				fi
+			fi
+			;;
+		?*)
+     		echoerr "Error: false weekday string"
+     		echoerr ""
+     		usage
+    		;;
+    	*)
+    		break
+	esac
+	shift
+done

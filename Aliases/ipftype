@@ -1,0 +1,30 @@
+ipftype() {
+if [[ $(ipfs 2>/dev/null) == "" ]] ; then
+	echo -e "IPFS is either not installed or not in your \$PATH"
+	return 1
+fi
+if [[ $(ps aux | grep "ipfs daemon" | grep -v "grep.*ipfs daemon" 2>/dev/null) == "" ]] ; then
+	echo -e "IPFS daemon is not running"
+	return 1
+fi
+if [[ $# -eq 0 ]] ; then
+	echo -e "No IPFS hash specified.\nUsage:\tipftype <hash>"
+	return 1
+fi
+for hash in "$@" ; do
+	daginfo=$(ipfs dag get $hash 2>/dev/null)
+	if [[ $daginfo == "" ]] ; then
+		echo -e "$hash: error"
+		continue
+	fi
+	if [[ $(echo "$daginfo" | grep "\"data\":\"CAE=") != "" ]] ; then
+		if [[ $(echo "$daginfo" | grep "\"links\":\[\]") == "" ]] ; then
+			echo -e "$hash: directory"
+		else
+			echo -e "$hash: empty directory"
+		fi
+	else
+		echo -e "$hash: file"
+	fi
+done
+}

@@ -1,0 +1,35 @@
+ipfadd() {
+if [[ $(ipfs 2>/dev/null) == "" ]] ; then
+	echo -e "IPFS is either not installed or not in your \$PATH"
+	return 1
+fi
+if [[ $(ps aux | grep "ipfs daemon" | grep -v "grep.*ipfs daemon" 2>/dev/null) == "" ]] ; then
+	echo -e "IPFS daemon is not running"
+	return 1
+fi
+if [[ $# -eq 0 ]] ; then
+	echo -e "No file specified.\nUsage:\tipfadd <file>"
+	return 1
+fi
+for file in "$@"
+do
+	if [[ ! -d "$file" ]] ; then
+		hash=$(ipfs add -Q "$file")
+		echo -e "Added file: $hash"
+	else
+		hash=$(ipfs add -Q -r "$file")
+		echo -e "Added directory: $hash"
+	fi
+	filename=$(basename "$file")
+	if [[ $(ipfs files ls /fresh | grep "^$filename$") != "" ]] ; then
+		ext="${filename##*.}"
+		name="${filename%.*}"
+		current_date=$(date -u +"%Y%m%d-%H%M%S")
+		filename="$name-$current_date.$ext"
+	fi
+	ipfs files cp /ipfs/$hash /fresh/"$filename"
+	mfs_row=$(ipfs files ls -l /fresh | grep "^$filename")
+	echo -e "Copied: /fresh/$mfs_row"
+done
+echo -e "Done."
+}

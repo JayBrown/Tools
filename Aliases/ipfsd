@@ -1,0 +1,1 @@
+alias ipfsd='export IPFS_REUSEPORT=false ; ipfs daemon --writable'
