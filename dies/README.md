@@ -39,7 +39,8 @@ FORMATS
 		Tuesday | Tues. | Tues | Tue. | Tue | Tu | T | 2
 		et cetera
 
-		dies also accepts: today | now | yesterday | tomorrow
+	dies also accepts:
+		today | now | yesterday | tomorrow
 
 EXAMPLES
 	dies 6
