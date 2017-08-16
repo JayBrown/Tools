@@ -20,9 +20,9 @@ elif $LONG ; then
 fi
 STD_DATE=$(echo "$DATE_INPUT" | awk '{print $3,$2,$1}')
 if $SHORT ; then
-  ROMAN_DATE=$(RomanDate $DATE)
+  ROMAN_DATE=$(RomanDate $(echo "$STD_DATE"))
 elif $LONG ; then
-  ROMAN_DATE=$(RomanDate --args words=complete $DATE)
+  ROMAN_DATE=$(RomanDate --args words=complete $(echo "$STD_DATE"))
 fi
 echo "$ROMAN_DAY $ROMAN_DATE"
 }
