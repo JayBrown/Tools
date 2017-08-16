@@ -23,7 +23,7 @@ usage() {
 	echo ""
 	echo "USAGE"
 	echo -e "\tdies [-i | -s | -u | -v] <WEEKDAY>"
-	echo -e "\talis [-h | -V]"
+	echo -e "\tdies [-h | -V]"
 	echo ""
 	echo "MAIN OPTIONS"
 	echo -e "\t-i, --j2i"
