@@ -1,6 +1,14 @@
 preview() {
 ITERM=false
 if [[ $1 == "-i" ]] || [[ $1 == "--inline" ]] ; then
+	if [[ $(ps aux | /usr/bin/grep iTerm2 | grep -v "/usr/bin/grep iTerm2") == "" ]] ; then
+		echo "Error: iTerm is not running." >&2
+		return 1
+	fi
+	if [[ $(osascript -e 'tell application "System Events"' -e 'set frontApp to name of first application process whose frontmost is true' -e 'end tell' 2>/dev/null) != "iTerm2" ]] ; then
+		echo "Error: you don't seem to be using iTerm to run this command." >&2
+		return 1
+	fi
 	ITERM=true
 	shift
 fi
@@ -10,20 +18,58 @@ if [ -t 0 ] ; then
 	else
 		for FILEPATH in "$@"
 		do
-			if $ITERM ; then
+			if [[ $(realpath --help 2>/dev/null) != "" ]] ; then
 				REALPATH=$(realpath "$FILEPATH")
-				echo "Displaying: $REALPATH"
+			else
+				REALPATH=$(python - "$FILEPATH" << 'EOF'
+import os.path
+import sys
+for arg in sys.argv[1:]:
+	print os.path.realpath(os.path.abspath(arg))
+EOF
+)
+			fi
+			SYMLINK=false
+			FILETYPE=$(stat -f "%HT" "$FILEPATH")
+			if [[ $FILETYPE != "Symbolic Link" ]] && [[ $FILETYPE != "Regular File" ]] ; then
+				echo "Error: wrong file type: $FILETYPE: $REALPATH" >&2
+				continue
+			fi
+			[[ $FILETYPE == "Symbolic Link" ]] && SYMLINK=true
+			if $SYMLINK ; then
+				if [[ ! -a "$REALPATH" ]] ; then
+					FILENAME=$(basename "$REALPATH")
+					echo "Error: missing original file: $FILENAME" >&2
+					continue
+				else
+					RFILETYPE=$(stat -f "%HT" "$REALPATH")
+					if [[ $RFILETYPE != "Regular File" ]] ; then
+						echo "Error: wrong file type: $RFILETYPE: $REALPATH" >&2
+						continue
+					fi
+				fi
+			fi
+			FILEPATH="$REALPATH"
+			if ! $(file "$FILEPATH" | grep -q -e image -e bitmap) ; then
+				echo "Error: not an image file: $FILEPATH"
+				continue
+			fi
+			if $ITERM ; then
+				echo "Displaying image file: $FILEPATH"
 				imgcat "$FILEPATH"
 			else
-				open -a Preview "$FILEPATH"
+				echo "Opening image file: $FILEPATH"
+				open -b com.apple.Preview "$FILEPATH"
 			fi
 		done
-	fi
+	  fi
 else
 	if $ITERM ; then
+		echo "Displaying image from stdin..."
 		imgcat
 	else
-		open -f -a Preview
+		echo "Opening image from stdin..."
+		open -f -a Preview # opening stdin in Preview.app doesn't seem to work with the -b option and the bundle identifier
 	fi
 fi
 }
