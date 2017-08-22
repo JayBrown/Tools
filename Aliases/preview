@@ -1,0 +1,29 @@
+preview() {
+ITERM=false
+if [[ $1 == "-i" ]] || [[ $1 == "--inline" ]] ; then
+	ITERM=true
+	shift
+fi
+if [ -t 0 ] ; then
+	if [ $# -eq 0 ]; then
+		echo "Error: no filepaths specified." >&2
+	else
+		for FILEPATH in "$@"
+		do
+			if $ITERM ; then
+				REALPATH=$(realpath "$FILEPATH")
+				echo "Displaying: $REALPATH"
+				imgcat "$FILEPATH"
+			else
+				open -a Preview "$FILEPATH"
+			fi
+		done
+	fi
+else
+	if $ITERM ; then
+		imgcat
+	else
+		open -f -a Preview
+	fi
+fi
+}

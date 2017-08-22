@@ -8,4 +8,5 @@
 * ipfadd
 * ipfsd
 * ipftype
+* preview
 * transfer
