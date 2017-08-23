@@ -2,14 +2,18 @@ preview() {
 ITERM=false
 if [[ $1 == "-i" ]] || [[ $1 == "--inline" ]] ; then
 	if [[ $(ps aux | /usr/bin/grep iTerm2 | grep -v "/usr/bin/grep iTerm2") == "" ]] ; then
-		echo "Error: iTerm is not running." >&2
-		return 1
+		echo "Ignoring inline option: iTerm not running." >&2
+	else
+		if [[ $(osascript -e 'tell application "System Events"' -e 'set frontApp to name of first application process whose frontmost is true' -e 'end tell' 2>/dev/null) != "iTerm2" ]] ; then
+			echo "Ignoring inline option: iTerm not frontmost." >&2
+		else
+			if [[ ! -f "$HOME/.iterm2/imgcat" ]] ; then
+				echo "Ignoring inline option: imgcat not at default path: $HOME/.iterm2/imgcat" >&2
+			else
+				ITERM=true
+			fi
+		fi
 	fi
-	if [[ $(osascript -e 'tell application "System Events"' -e 'set frontApp to name of first application process whose frontmost is true' -e 'end tell' 2>/dev/null) != "iTerm2" ]] ; then
-		echo "Error: you don't seem to be using iTerm to run this command." >&2
-		return 1
-	fi
-	ITERM=true
 	shift
 fi
 if [ -t 0 ] ; then
