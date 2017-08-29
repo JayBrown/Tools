@@ -1,0 +1,54 @@
+ipfrec() {
+	ipfrecint() {
+		OBJECT_LIST=$(ipfs files ls -l "$1" | rev)
+		while read -r OBJECT
+		do
+			[[ "$OBJECT" == "" ]] && continue
+			ONAME=$(echo "$OBJECT" | awk '{print substr($0, index($0,$3))}' | rev)
+			OSIZE=$(echo "$OBJECT" | awk '{print $1}' | rev)
+			OHASH=$(echo "$OBJECT" | awk '{print $2}' | rev)
+			if [ "$OSIZE" -eq "0" ] ; then
+				if ! $FILESONLY ; then
+					if [[ $1 == "/" ]] ; then
+						echo -e "dir:\t$OHASH\t$1$ONAME"
+					else
+						echo -e "dir:\t$OHASH\t$1/$ONAME"
+					fi
+				fi
+				if [[ $1 == "/" ]] ; then
+					ipfrecint "$1$ONAME"
+				else
+					ipfrecint "$1/$ONAME"
+				fi
+			elif [ "$OSIZE" -gt "0" ] ; then
+				if ! $DIRSONLY ; then
+					if [[ $1 == "/" ]] ; then
+						echo -e "file:\t$OHASH\t$1$ONAME\t$OSIZE"
+					else
+						echo -e "file:\t$OHASH\t$1/$ONAME\t$OSIZE"
+					fi
+				fi
+			fi
+		done < <(echo "$OBJECT_LIST")
+	}
+	if [[ $1 == "-d" ]] || [[ $1 == "--directories" ]] ; then
+		FILESONLY=false
+		DIRSONLY=true
+		shift
+	elif [[ $1 == "-f" ]] || [[ $1 == "--files" ]] ; then
+		FILESONLY=true
+		DIRSONLY=false
+		shift
+	else
+		FILESONLY=false
+		DIRSONLY=false
+	fi
+	if [[ $@ == "" ]] ; then
+		ipfrecint /
+	else
+		for FILESPATH in "$@"
+		do
+			ipfrecint "$FILESPATH"
+		done
+	fi
+}
