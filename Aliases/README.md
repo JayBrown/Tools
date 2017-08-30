@@ -4,9 +4,10 @@
 
 # Command Line Tools: Aliases <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 
-* auc
-* ipfadd
-* ipfsd
-* ipftype
-* preview
-* transfer
+* auc: output Latin weekday and Roman calendar date
+* ipfadd: add file or directory to IPFS node and auto-copy to MFS
+* ipfrec: recurse your IPFS node's MFS
+* ipfsd: IPFS daemon command with added settings
+* ipftype: display IPFS object type (file, directory, empty directory)
+* preview: preview image files from the command line (open with Preview or display inline)
+* transfer: transfer.sh upload alias
