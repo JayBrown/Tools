@@ -7,39 +7,62 @@ ipfrec() {
 			ONAME=$(echo "$OBJECT" | awk '{print substr($0, index($0,$3))}' | rev)
 			OSIZE=$(echo "$OBJECT" | awk '{print $1}' | rev)
 			OHASH=$(echo "$OBJECT" | awk '{print $2}' | rev)
+			if [[ $1 == "/" ]] ; then
+				SUBPATH="$1$ONAME"
+			else
+				SUBPATH="$1/$ONAME"
+			fi
 			if [ "$OSIZE" -eq "0" ] ; then
-				if ! $FILESONLY ; then
-					if [[ $1 == "/" ]] ; then
-						echo -e "dir:\t$OHASH\t$1$ONAME"
-					else
-						echo -e "dir:\t$OHASH\t$1/$ONAME"
-					fi
-				fi
-				if [[ $1 == "/" ]] ; then
-					ipfrecint "$1$ONAME"
+				! $FILESONLY && echo -e "dir:\t$OHASH\t$SUBPATH"
+				if [ "$MAXD" -eq "0" ] ; then
+					ipfrecint "$SUBPATH"
 				else
-					ipfrecint "$1/$ONAME"
+					SLASHN=$(echo "$SUBPATH" | awk -F/ '{print NF-1}')
+					if [ "$SLASHN" -eq "$MAXD" ] ; then
+						continue
+					else
+						ipfrecint "$SUBPATH"
+					fi
 				fi
 			elif [ "$OSIZE" -gt "0" ] ; then
-				if ! $DIRSONLY ; then
-					if [[ $1 == "/" ]] ; then
-						echo -e "file:\t$OHASH\t$1$ONAME\t$OSIZE"
-					else
-						echo -e "file:\t$OHASH\t$1/$ONAME\t$OSIZE"
-					fi
-				fi
+				! $DIRSONLY && echo -e "file:\t$OHASH\t$SUBPATH\t$OSIZE"
 			fi
 		done < <(echo "$OBJECT_LIST")
 	}
-	if [[ $1 == "-d" ]] || [[ $1 == "--directories" ]] ; then
-		FILESONLY=false
-		DIRSONLY=true
+	FILESONLY=false
+	DIRSONLY=false
+	MAXD="0"
+	while :; do
+		case $1 in
+			-d|--directories)
+				DIRSONLY=true
+				;;
+			-f|--files)
+				FILESONLY=true
+				;;
+			-m|--maxdepth)
+				shift
+				MAXD="$1"
+				REGEX='^[0-9]+$'
+				if ! [[ $MAXD =~ $REGEX ]] ; then
+					echo "Error: an alternate argument for option -m needs to be a positive integer (default: 0 = full scan)." >&2
+					return 1
+				fi
+				;;
+			--)
+				shift
+				break
+				;;
+			-?*)
+				echo "Error: invalid option: $1" >&2
+				return 1
+				;;
+			*)
+				break
+		esac
 		shift
-	elif [[ $1 == "-f" ]] || [[ $1 == "--files" ]] ; then
-		FILESONLY=true
-		DIRSONLY=false
-		shift
-	else
+	done
+	if $FILESONLY && $DIRSONLY ; then
 		FILESONLY=false
 		DIRSONLY=false
 	fi
