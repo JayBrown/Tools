@@ -29,6 +29,10 @@ ipfrec() {
 			fi
 		done < <(echo "$OBJECT_LIST")
 	}
+	if [[ $(ipfs 2>/dev/null) == "" ]] ; then
+		echo "Error: IPFS is either not installed or not in your \$PATH" 2>&1
+		return 1
+	fi
 	FILESONLY=false
 	DIRSONLY=false
 	MAXD="0"
