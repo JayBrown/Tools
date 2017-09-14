@@ -1,0 +1,3 @@
+expandurl() {
+	curl -sIL $1 | grep '^Location:' | tail -n 1 | awk '{print $2}'
+}

@@ -5,6 +5,7 @@
 # Command Line Tools: Aliases <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 
 * auc: output Latin weekday and Roman calendar date
+* expandurl: expand shortened URLs
 * ipfadd: add file or directory to IPFS node and auto-copy to MFS
 * ipfrec: recurse your IPFS node's MFS
 * ipfsd: IPFS daemon command with added settings
