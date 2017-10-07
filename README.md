@@ -12,5 +12,6 @@
 ## Content
 * **adler32**: calculate the Adler32 hash for a specified file
 * **dies**: convert English to Latin weekday names
+* **ipfg**: check online status of IPFS public gateways
 
 and various shell aliases.
