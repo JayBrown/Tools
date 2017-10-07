@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1 (10-2017)
+ipfg 1.1.1 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running ipfg without an option will check the online status of all available IPFS gateways.
@@ -16,9 +16,6 @@ OPTIONS:
 
 	-d | --delete [<URL> | all]
 		Delete specified or all gateway URLs from local list (format: see above)
-
-	-g | --github | --repo
-		Open GitHub repository in default web browser
 
 	-h | --help
 		This help page
@@ -40,6 +37,9 @@ OPTIONS:
 
 	-V | --version
 		Print version number
+
+	-w | --web
+		Open web version of the IPFS public gateway checker
 
 Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
 License: MIT

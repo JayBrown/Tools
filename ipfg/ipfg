@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1
+# v1.1.1
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -23,8 +23,6 @@ usage() {
 	echo ""
 	echo -e "\t-d | --delete [<URL> | all]\n\t\tDelete specified or all gateway URLs from local list (format: see above)"
 	echo ""
-	echo -e "\t-g | --github | --repo\n\t\tOpen GitHub repository in default web browser"
-	echo ""
 	echo -e "\t-h | --help\n\t\tThis help page"
 	echo ""
 	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URLs"
@@ -38,6 +36,8 @@ usage() {
 	echo -e "\t-s | --save | --backup\n\t\tSave remote gateway list to a local backup file"
 	echo ""
 	echo -e "\t-V | --version\n\t\tPrint version number"
+	echo ""
+	echo -e "\t-w | --web\n\t\tOpen web version of the IPFS public gateway checker"
 	echo ""
 	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown"
 	echo "License: MIT"
@@ -75,7 +75,7 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1"
+VERSION="1.1.1"
 DATE="10-2017"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
@@ -129,11 +129,6 @@ else
 					DELETE=true
 					ADD=false
 					;;
-				-g|--github|--repo)
-					echoerr "Opening GitHub repository in your default web browser..."
-					open https://github.com/ipfs/public-gateway-checker
-					exit 0
-					;;
 				-h|-\?|--help)
 					usage
 					exit 0
@@ -175,6 +170,11 @@ else
 					;;
 				-V|--version)
 					echo "ipfg $VERSION $DATE"
+					exit 0
+					;;
+				-w|--web)
+					echoerr "Opening web version of the IPFS public gateway checker..."
+					open https://ipfs.github.io/public-gateway-checker/
 					exit 0
 					;;
 				--)
