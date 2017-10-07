@@ -43,4 +43,7 @@ OPTIONS:
 
 Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
 License: MIT
+
+Inspired by the original web-based IPFS Public Gateway Checker
+https://github.com/ipfs/public-gateway-checker
 ```

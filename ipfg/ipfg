@@ -41,6 +41,9 @@ usage() {
 	echo ""
 	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown"
 	echo "License: MIT"
+	echo ""
+	echo "Inspired by the original web-based IPFS Public Gateway Checker"
+	echo "https://github.com/ipfs/public-gateway-checker"
 }
 
 backup-remote() {
