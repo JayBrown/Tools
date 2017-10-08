@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1.1
+# v1.1.2
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
 # license: MIT
+
+LANG=en_US.UTF-8
+export PATH=/usr/local/bin:$PATH
+export HISTIGNORE='*ipfs config show*'
 
 echoerr() {
 	echo "$1" 1>&2
@@ -33,9 +37,9 @@ usage() {
 	echo ""
 	echo -e "\t-R | --remote\n\t\tOnly check gateways on remote list"
 	echo ""
-	echo -e "\t-s | --save | --backup\n\t\tSave remote gateway list to a local backup file"
+	echo -e "\t-s | --save | --backup [all | hash | url]\n\t\tSave remote data to local backup files"
 	echo ""
-	echo -e "\t-V | --version\n\t\tPrint version number"
+	echo -e "\t-V | --version\n\t\tPrint version number (incl. update check)"
 	echo ""
 	echo -e "\t-w | --web\n\t\tOpen web version of the IPFS public gateway checker"
 	echo ""
@@ -47,30 +51,38 @@ usage() {
 }
 
 backup-remote() {
-	rm -f "$IPFG_DIR/remote-backup-old" 2>/dev/null \
-		&& cp "$RLB_PATH" "$IPFG_DIR/remote-backup-old" 2>/dev/null \
-		&& rm -f "$RLB_PATH" 2>/dev/null
 	if ! $INITIAL ; then
 		echoerr "Creating backup of remote gateway list. Please wait..."
 	fi
 	RGATEWAYS=$(curl --silent "$RL_PATH" | sed -e '$ d' -e '1,1d' -e '/^$/d' -e 's/\"//g' -e 's/,$//g')
 	if [[ $RGATEWAYS == "" ]] ; then
-		echoerr "Error: no access to remote list."
-		if ! $INITIAL ; then
-			echoerr "Restoring from backup..."
-			cp "$IPFG_DIR/remote-backup-old" "$RLB_PATH"
-		else
-			echoerr "Please try again later."
-			exit 1
-		fi
+		echoerr "Error: no access to remote list. Please try again later."
 	else
+		rm -f "$IPFG_DIR/remote-backup-old" 2>/dev/null \
+			&& mv "$RLB_PATH" "$IPFG_DIR/remote-backup-old" 2>/dev/null
 		while read -r GATEWAY
 		do
 			GATEWAY=$(echo "$GATEWAY" | xargs)
 			echo "$GATEWAY" >> "$RLB_PATH"
 		done < <(echo "$RGATEWAYS")
+		echoerr "Done."
 	fi
-	echoerr "Done."
+}
+
+backup-hash() {
+	if ! $INITIAL ; then
+		echoerr "Creating backup of current IPFS hash. Please wait..."
+	fi
+	WEB_HASH=$(curl --silent "$WB_PATH")
+	if [[ $WEB_HASH == "" ]] ; then
+		echoerr "Error: no access to current IPFS hash. Please try again later."
+		exit 1
+	else
+		rm -f "$IPFG_DIR/hash-old" 2>/dev/null \
+			&& mv "$HASH_PATH" "$IPFG_DIR/hash-old" 2>/dev/null
+		echo "$WEB_HASH" > "$HASH_PATH"
+		echoerr "Done."
+	fi
 }
 
 RED='\033[0;31m'
@@ -78,10 +90,14 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1.1"
+VERSION="1.1.2"
 DATE="10-2017"
 
+UPDV="1.12"
+
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
+WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
+REPOV="https://raw.githubusercontent.com/JayBrown/Tools/master/ipfg/ipfg"
 
 TESTHASH="Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
@@ -92,13 +108,23 @@ mkdir -p "$IPFG_DIR"
 
 RLB_PATH="$IPFG_DIR/remote-backup"
 LL_PATH="$IPFG_DIR/local"
+HASH_PATH="$IPFG_DIR/hash"
+
 if ! [[ -f "$LL_PATH" ]] ; then
 	touch "$LL_PATH"
 fi
+
 if ! [[ -f "$RLB_PATH" ]] ; then
 	INITIAL=true
 	echoerr "Creating initial backup of remote gateway list. Please wait..."
 	backup-remote
+	INITIAL=false
+fi
+
+if ! [[ -f "$HASH_PATH" ]] ; then
+	INITIAL=true
+	echoerr "Creating initial backup of current IPFS hash. Please wait..."
+	backup-hash
 	INITIAL=false
 fi
 
@@ -168,16 +194,51 @@ else
 					MANUAL=false
 					;;
 				-s|--save|--backup)
-					backup-remote
+					shift
+					if [[ $1 == "url" ]] ; then
+						backup-remote
+					elif [[ $1 == "hash" ]] ; then
+						backup-hash
+					else
+						backup-remote && backup-hash
+					fi
 					exit 0
 					;;
 				-V|--version)
 					echo "ipfg $VERSION $DATE"
+					echoerr "Checking for updates. Please wait..."
+					RVERS=$(curl --silent "$REPOV" | grep "UPDV=" | awk -F\" '{print $2}')
+					[[ $RVERS == "" ]] && RVERS="1.0"
+					if (( $(bc -l <<< "$RVERS > $UPDV") )) ; then
+						echo "New update v$RVERS available at: https://github.com/JayBrown/Tools/tree/master/ipfg"
+					else
+						echoerr "Your version is up-to-date."
+					fi
 					exit 0
 					;;
 				-w|--web)
-					echoerr "Opening web version of the IPFS public gateway checker..."
-					open https://ipfs.github.io/public-gateway-checker/
+					WEB_HASH=$(curl --silent "$WB_PATH")
+					if [[ $WEB_HASH == "" ]] ; then
+						WEB_HASH=$(cat "$HASH_PATH" 2>/dev/null | sed -e '/^$/d')
+						if [[ $WEB_HASH == "" ]] ; then
+							echoerr "Opening fallback web version of IPFS public gateway checker..."
+							open "https://ipfs.github.io/public-gateway-checker/"
+							exit 0
+						fi
+					fi
+					if [[ $(ipfs 2>/dev/null) == "" ]] ; then
+						echoerr "Opening web version of IPFS public gateway checker on IPFS gateway..."
+						open "https://ipfs.io/ipfs/$WEB_HASH"
+					else
+						if [[ $(ps aux | grep "ipfs daemon" | grep -v "grep.*ipfs daemon" 2>/dev/null) == "" ]] ; then
+							echoerr "Opening web version of IPFS public gateway checker on IPFS gateway..."
+							open "https://ipfs.io/ipfs/$WEB_HASH"
+						else
+							IPFS_PORT=$(ipfs config show | grep "Gateway" | head -1 | rev | awk -F/ '{print $1}' | rev | sed -e 's/,//' -e 's/\"//')
+							echoerr "Opening web version of IPFS public gateway checker on localhost..."
+							open "http://localhost:$IPFS_PORT/ipfs/$WEB_HASH"
+						fi
+					fi
 					exit 0
 					;;
 				--)
