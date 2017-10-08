@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1.1 (10-2017)
+ipfg 1.1.2 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running ipfg without an option will check the online status of all available IPFS gateways.
@@ -32,11 +32,11 @@ OPTIONS:
 	-R | --remote
 		Only check gateways on remote list
 
-	-s | --save | --backup
-		Save remote gateway list to a local backup file
+	-s | --save | --backup [all | hash | url]
+		Save remote data to local backup files
 
 	-V | --version
-		Print version number
+		Print version number (incl. update check)
 
 	-w | --web
 		Open web version of the IPFS public gateway checker
@@ -46,4 +46,4 @@ License: MIT
 
 Inspired by the original web-based IPFS Public Gateway Checker
 https://github.com/ipfs/public-gateway-checker
-```
+``
