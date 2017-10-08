@@ -207,7 +207,7 @@ else
 				-V|--version)
 					echo "ipfg $VERSION $DATE"
 					echoerr "Checking for updates. Please wait..."
-					RVERS=$(curl --silent "$REPOV" | grep "UPDV=" | awk -F\" '{print $2}')
+					RVERS=$(curl --silent "$REPOV" | grep "UPDV=" | awk -F\" '{print $2}' | head -1)
 					[[ $RVERS == "" ]] && RVERS="1.0"
 					if (( $(bc -l <<< "$RVERS > $UPDV") )) ; then
 						echo "New update v$RVERS available at: https://github.com/JayBrown/Tools/tree/master/ipfg"
