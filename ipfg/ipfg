@@ -225,6 +225,12 @@ else
 							open "https://ipfs.github.io/public-gateway-checker/"
 							exit 0
 						fi
+					else
+						LOCAL_HASH=$(cat "$HASH_PATH" 2>/dev/null | sed -e '/^$/d')
+						if [[ $LOCAL_HASH != "" ]] && [[ $WEB_HASH != $LOCAL_HASH ]] ; then
+							echoerr "New hash detected: $WEB_HASH"
+							backup-hash
+						fi
 					fi
 					if [[ $(ipfs 2>/dev/null) == "" ]] ; then
 						echoerr "Opening web version of IPFS public gateway checker on IPFS gateway..."
