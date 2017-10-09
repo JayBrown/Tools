@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1.3
+# v1.1.4
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -35,11 +35,11 @@ usage() {
 	echo ""
 	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URL"
 	echo ""
-	echo -e "\t-L | --local\n\t\tOnly check gateways on local list"
+	echo -e "\t-L | --local [raw]\n\t\tOnly check gateways on local list"
 	echo ""
 	echo -e "\t-M | --manual <URL>\n\t\tCheck only the specified URLs"
 	echo ""
-	echo -e "\t-R | --remote\n\t\tOnly check gateways on remote list"
+	echo -e "\t-R | --remote [raw]\n\t\tOnly check gateways on remote list"
 	echo ""
 	echo -e "\t-s | --save [all | hash | url]\n\t\tManually save remote data to local backup files"
 	echo ""
@@ -98,10 +98,10 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1.3"
+VERSION="1.1.4"
 DATE="10-2017"
 
-UPDV="1.13"
+UPDV="1.14"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
 WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
@@ -225,6 +225,10 @@ else
 				-L|--local)
 					LOCAL=true
 					MANUAL=false
+					shift
+					if [[ $1 == "raw" ]] ; then
+						RAW=true
+					fi
 					;;
 				-M|--manual)
 					MANUAL=true
@@ -234,6 +238,10 @@ else
 				-R|--remote)
 					REMOTE=true
 					MANUAL=false
+					shift
+					if [[ $1 == "raw" ]] ; then
+						RAW=true
+					fi
 					;;
 				-s|--save)
 					shift
@@ -554,15 +562,23 @@ do
 
 	GATEWAY=$(echo "$GATEWAY" | xargs)
 	TESTURL=$(echo "$GATEWAY" | sed -e "s-:hash-$TESTHASH-")
-	DOMAIN=$(echo "$GATEWAY" | awk -F/ '{print $1"//"$3}')
+	if $RAW ; then
+		DOMAIN="$TESTURL"
+	else
+		DOMAIN=$(echo "$GATEWAY" | awk -F/ '{print $1"//"$3}')
+	fi
 
 	if [[ $(curl --silent "$TESTURL") == "Hello from IPFS Gateway Checker" ]] ; then
 		echo -e "${GREEN}Online${NC}\t$DOMAIN"
 	else
 		RESP_CODE=$(/usr/bin/curl -o /dev/null --silent --head --write-out "%{http_code}\n" $TESTURL)
 		if [[ $RESP_CODE =~ ^(301|303|307|308)$ ]] ; then
+			DOMAIN=$(echo "$GATEWAY" | awk -F/ '{print $1"//"$3}')
 			RD_DOMAIN=$(curl -w "%{url_effective}\n" -I -L -s -S "$DOMAIN" -o /dev/null | sed 's-/*$--')
 			RD_TESTURL="$RD_DOMAIN/ipfs/$TESTHASH"
+			if $RAW ; then
+				RD_DOMAIN="$RD_TESTURL"
+			fi
 			if [[ $(curl --silent "$RD_TESTURL") == "Hello from IPFS Gateway Checker" ]] ; then
 				echo -e "${BLUE}Online${NC}\t$RD_DOMAIN\t[$RESP_CODE: $DOMAIN]"
 			else

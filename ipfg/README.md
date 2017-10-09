@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1.3 (10-2017)
+ipfg 1.1.4 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running ipfg without an option will check the online status of all available IPFS gateways.
@@ -29,13 +29,13 @@ OPTIONS:
 	-l | --list [raw] [all | local | remote]
 		Display listed gateways as domains or raw URL
 
-	-L | --local
+	-L | --local [raw]
 		Only check gateways on local list
 
 	-M | --manual <URL>
 		Check only the specified URLs
 
-	-R | --remote
+	-R | --remote [raw]
 		Only check gateways on remote list
 
 	-s | --save [all | hash | url]
