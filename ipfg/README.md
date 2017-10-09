@@ -4,11 +4,10 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1.4 (10-2017)
+ipfg 1.1.5 (10-2017)
 IPFS public gateway checker (extended cli version)
 
-Running ipfg without an option will check the online status of all available IPFS gateways.
-When using multiple options, only the final option will be recognized.
+Running 'ipfg' without an option will check the online status of all available IPFS gateways.
 
 OPTIONS:
 	-a | --add <URL>
@@ -27,7 +26,7 @@ OPTIONS:
 		This help page
 
 	-l | --list [raw] [all | local | remote]
-		Display listed gateways as domains or raw URL
+		Display listed gateways as domains or raw URLs
 
 	-L | --local [raw]
 		Only check gateways on local list
@@ -47,13 +46,22 @@ OPTIONS:
 	-w | --web
 		Open web-based version of the IPFS public gateway checker
 
-FORMAT:
+Adding 'raw' to a gateway check will print the full URL instead of the gateway domain.
+When using multiple options, only the final option will be recognized.
+
+GATEWAY URL FORMAT:
 	http[s]://<domain>.<tld>/ipfs/:hash
-	Example: https://ipfs.io/ipfs/:hash
 
-Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
-License: MIT
+EXAMPLES:
+	ipfg
+	ipfg raw
+	ipfg -l remote
+	ipfg -l raw local
+	ipfg -a https://mygateway.com/ipfs/:hash
+	ipfg -d https://mygateway.com/ipfs/:hash
+	ipfg -L
+	ipfg -M https://ipfs.io/ipfs/:hash
+	ipfg -R raw
 
-Inspired by the original web-based IPFS Public Gateway Checker
-https://github.com/ipfs/public-gateway-checker
+Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown (License: MIT)
 ```

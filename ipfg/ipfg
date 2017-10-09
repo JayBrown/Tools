@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1.4
+# v1.1.5
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -19,8 +19,7 @@ usage() {
 	echo "ipfg $VERSION ($DATE)"
 	echo "IPFS public gateway checker (extended cli version)"
 	echo ""
-	echo "Running ipfg without an option will check the online status of all available IPFS gateways."
-	echo "When using multiple options, only the final option will be recognized."
+	echo "Running 'ipfg' without an option will check the online status of all available IPFS gateways."
 	echo ""
 	echo "OPTIONS:"
 	echo -e "\t-a | --add <URL>\n\t\tAdd specified gateway URLs to local list"
@@ -33,7 +32,7 @@ usage() {
 	echo ""
 	echo -e "\t-H | --help\n\t\tThis help page"
 	echo ""
-	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URL"
+	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URLs"
 	echo ""
 	echo -e "\t-L | --local [raw]\n\t\tOnly check gateways on local list"
 	echo ""
@@ -47,15 +46,24 @@ usage() {
 	echo ""
 	echo -e "\t-w | --web\n\t\tOpen web-based version of the IPFS public gateway checker"
 	echo ""
-	echo "FORMAT:"
+	echo "Adding 'raw' to a gateway check will print the full URL instead of the gateway domain."
+	echo "When using multiple options, only the final option will be recognized."
+	echo ""
+	echo "GATEWAY URL FORMAT:"
 	echo -e "\thttp[s]://<domain>.<tld>/ipfs/:hash"
-	echo -e "\tExample: https://ipfs.io/ipfs/:hash"
 	echo ""
-	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown"
-	echo "License: MIT"
+	echo "EXAMPLES:"
+	echo -e "\tipfg"
+	echo -e "\tipfg raw"
+	echo -e "\tipfg -l remote"
+	echo -e "\tipfg -l raw local"
+	echo -e "\tipfg -a https://mygateway.com/ipfs/:hash"
+	echo -e "\tipfg -d https://mygateway.com/ipfs/:hash"
+	echo -e "\tipfg -L"
+	echo -e "\tipfg -M https://ipfs.io/ipfs/:hash"
+	echo -e "\tipfg -R raw"
 	echo ""
-	echo "Inspired by the original web-based IPFS Public Gateway Checker"
-	echo "https://github.com/ipfs/public-gateway-checker"
+	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown (License: MIT)"
 }
 
 backup-remote() {
@@ -98,10 +106,10 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1.4"
+VERSION="1.1.5"
 DATE="10-2017"
 
-UPDV="1.14"
+UPDV="1.15"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
 WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
@@ -156,10 +164,16 @@ if [[ "$@" == "" ]] ; then
 	LOCAL=true
 else
 	if [[ $1 != "-"* ]] ; then
-		echoerr "Invalid option: $1"
-		echoerr ""
-		usage
-		exit 1
+		if [[ $1 == "raw" ]] ; then
+			RAW=true
+			REMOTE=true
+			LOCAL=true
+		else
+			echoerr "Invalid option: $1"
+			echoerr ""
+			usage
+			exit 1
+		fi
 	else
 		while :; do
 			case $1 in
