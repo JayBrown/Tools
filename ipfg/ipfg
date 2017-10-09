@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1.5
+# v1.2.0
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -42,12 +42,15 @@ usage() {
 	echo ""
 	echo -e "\t-s | --save [all | hash | url]\n\t\tManually save remote data to local backup files"
 	echo ""
+	echo -e "\t-u | --upload | --cache [local | remote] <URL>\n\t\tCache an IPFS object from a local or remote node on a gateway node"
+	echo ""
 	echo -e "\t-V | --version\n\t\tPrint version number (incl. update check)"
 	echo ""
 	echo -e "\t-w | --web\n\t\tOpen web-based version of the IPFS public gateway checker"
 	echo ""
 	echo "Adding 'raw' to a gateway check will print the full URL instead of the gateway domain."
 	echo "When using multiple options, only the final option will be recognized."
+	echo "Caching will only be attempted on one gateway at a time."
 	echo ""
 	echo "GATEWAY URL FORMAT:"
 	echo -e "\thttp[s]://<domain>.<tld>/ipfs/:hash"
@@ -62,6 +65,7 @@ usage() {
 	echo -e "\tipfg -L"
 	echo -e "\tipfg -M https://ipfs.io/ipfs/:hash"
 	echo -e "\tipfg -R raw"
+	echo -e "\tipfg -u local https://ipfs.io/ipfs/\"\$(echo 'This is an ipfg cache run.' | ipfs add -Q)\""
 	echo ""
 	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown (License: MIT)"
 }
@@ -106,10 +110,10 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1.5"
+VERSION="1.2.0"
 DATE="10-2017"
 
-UPDV="1.15"
+UPDV="1.20"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
 WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
@@ -158,6 +162,9 @@ REMOTE=false
 LOCAL=false
 WPRINT=true
 LPRINT=true
+CACHE=false
+CLOCAL=true
+CREMOTE=false
 
 if [[ "$@" == "" ]] ; then
 	REMOTE=true
@@ -267,6 +274,14 @@ else
 						backup-remote && backup-hash
 					fi
 					exit 0
+					;;
+				-u|--upload|--cache)
+					CACHE=true
+					shift
+					if [[ $1 == "remote" ]] ; then
+						CLOCAL=false
+						CREMOTE=true
+					fi
 					;;
 				-V|--version)
 					echo "ipfg $VERSION $DATE"
@@ -501,6 +516,50 @@ if $LIST ; then
 	elif ! $LIST_REMOTE && $LIST_LOCAL ; then
 		echo "$LGATEWAYS"
 	fi
+	exit 0
+fi
+
+if $CACHE ; then
+	if $CLOCAL ; then
+		if [[ $(ipfs 2>/dev/null) == "" ]] ; then
+			echoerr "Error: ipfs is either not installed or not in your \$PATH"
+			exit 1
+		fi
+		if [[ $(ps aux | grep "ipfs daemon" | grep -v "grep.*ipfs daemon" 2>/dev/null) == "" ]] ; then
+			echoerr "Error: IPFS daemon is not running"
+			exit 1
+		fi
+	fi
+	POSIXDATE=$(date +%s)
+	mkdir /tmp/ipfg-$POSIXDATE
+	CDOMAIN=$(echo "$1" | awk -F/ '{print $1"//"$3}')
+	TEMPNAME=$(basename "$1")
+	TESTURL=$(echo "$1" | sed "s/$TEMPNAME$/$TESTHASH/")
+	if [[ $(curl --silent "$TESTURL") != "Hello from IPFS Gateway Checker" ]] ; then
+		RESP_CODE=$(/usr/bin/curl -o /dev/null --silent --head --write-out "%{http_code}\n" $TESTURL)
+		if [[ $RESP_CODE =~ ^(301|303|307|308)$ ]] ; then
+			RD_CDOMAIN=$(curl -w "%{url_effective}\n" -I -L -s -S "$CDOMAIN" -o /dev/null | sed 's-/*$--')
+			RD_TESTURL="$RD_CDOMAIN/ipfs/$TESTHASH"
+			if [[ $(curl --silent "$RD_TESTURL") != "Hello from IPFS Gateway Checker" ]] ; then
+				echoerr "Error: gateway on $RD_CDOMAIN [$RESP_CODE] is currently offline."
+				exit 1
+			else
+				CDOMAIN="$RD_CDOMAIN"
+				CACHE_URL="$RD_CDOMAIN/ipfs/$TEMPNAME"
+			fi
+		else
+			echoerr "Error: gateway on $CDOMAIN is currently offline [$RESP_CODE]"
+			exit 1
+		fi
+	else
+		CACHE_URL="$1"
+	fi
+	echoerr "Please wait... attempting to cache $TEMPNAME on $CDOMAIN"
+	echoerr ""
+	curl -o /tmp/ipfg-$POSIXDATE/"$TEMPNAME" "$CACHE_URL"
+	echoerr ""
+	rm -rf /tmp/ipfg-$POSIXDATE 2>/dev/null
+	echoerr "Done."
 	exit 0
 fi
 

@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1.5 (10-2017)
+ipfg 1.2.0 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running 'ipfg' without an option will check the online status of all available IPFS gateways.
@@ -40,6 +40,9 @@ OPTIONS:
 	-s | --save [all | hash | url]
 		Manually save remote data to local backup files
 
+	-u | --upload | --cache [local | remote] <URL>
+		Cache an IPFS object from a local or remote node on a gateway node
+
 	-V | --version
 		Print version number (incl. update check)
 
@@ -48,6 +51,7 @@ OPTIONS:
 
 Adding 'raw' to a gateway check will print the full URL instead of the gateway domain.
 When using multiple options, only the final option will be recognized.
+Caching will only be attempted on one gateway at a time.
 
 GATEWAY URL FORMAT:
 	http[s]://<domain>.<tld>/ipfs/:hash
@@ -62,6 +66,7 @@ EXAMPLES:
 	ipfg -L
 	ipfg -M https://ipfs.io/ipfs/:hash
 	ipfg -R raw
+	ipfg -u local https://ipfs.io/ipfs/"$(echo 'This is an ipfg cache run.' | ipfs add -Q)"
 
 Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown (License: MIT)
 ```
