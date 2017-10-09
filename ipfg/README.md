@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.2.0 (10-2017)
+ipfg 1.2.1 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running 'ipfg' without an option will check the online status of all available IPFS gateways.

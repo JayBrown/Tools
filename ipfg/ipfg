@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.2.0
+# v1.2.1
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -110,10 +110,10 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.2.0"
+VERSION="1.2.1"
 DATE="10-2017"
 
-UPDV="1.20"
+UPDV="1.21"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
 WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
@@ -277,10 +277,17 @@ else
 					;;
 				-u|--upload|--cache)
 					CACHE=true
-					shift
-					if [[ $1 == "remote" ]] ; then
-						CLOCAL=false
-						CREMOTE=true
+					if [[ $2 != "http"* ]] ; then
+						shift
+						if ! [[ $1 =~ ^(remote|local)$ ]] ; then
+							echoerr "Error: wrong argument: $1"
+							exit 1
+						else
+							if [[ $1 == "remote" ]] ; then
+								CLOCAL=false
+								CREMOTE=true
+							fi
+						fi
 					fi
 					;;
 				-V|--version)
