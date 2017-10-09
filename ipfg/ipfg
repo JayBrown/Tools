@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ipfg
-# v1.1.2
+# v1.1.3
 # IPFS public gateway checker (extended cli version)
 # original repository: https://github.com/ipfs/public-gateway-checker
 # this script copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
@@ -23,13 +23,17 @@ usage() {
 	echo "When using multiple options, only the final option will be recognized."
 	echo ""
 	echo "OPTIONS:"
-	echo -e "\t-a | --add <URL>\n\t\tAdd specified gateway URLs to local list (format: http[s]://<domain>.<tld>/ipfs/:hash)"
+	echo -e "\t-a | --add <URL>\n\t\tAdd specified gateway URLs to local list"
 	echo ""
-	echo -e "\t-d | --delete [<URL> | all]\n\t\tDelete specified or all gateway URLs from local list (format: see above)"
+	echo -e "\t-c | --compare\n\t\tCheck remote gateway list for changes incl. auto-backup"
 	echo ""
-	echo -e "\t-h | --help\n\t\tThis help page"
+	echo -e "\t-d | --delete [<URL> | all]\n\t\tDelete specified or all gateway URLs from local list"
 	echo ""
-	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URLs"
+	echo -e "\t-h | --hash\n\t\tPrint current and saved IPFS hashes incl. auto-backup"
+	echo ""
+	echo -e "\t-H | --help\n\t\tThis help page"
+	echo ""
+	echo -e "\t-l | --list [raw] [all | local | remote]\n\t\tDisplay listed gateways as domains or raw URL"
 	echo ""
 	echo -e "\t-L | --local\n\t\tOnly check gateways on local list"
 	echo ""
@@ -37,11 +41,15 @@ usage() {
 	echo ""
 	echo -e "\t-R | --remote\n\t\tOnly check gateways on remote list"
 	echo ""
-	echo -e "\t-s | --save | --backup [all | hash | url]\n\t\tSave remote data to local backup files"
+	echo -e "\t-s | --save [all | hash | url]\n\t\tManually save remote data to local backup files"
 	echo ""
 	echo -e "\t-V | --version\n\t\tPrint version number (incl. update check)"
 	echo ""
-	echo -e "\t-w | --web\n\t\tOpen web version of the IPFS public gateway checker"
+	echo -e "\t-w | --web\n\t\tOpen web-based version of the IPFS public gateway checker"
+	echo ""
+	echo "FORMAT:"
+	echo -e "\thttp[s]://<domain>.<tld>/ipfs/:hash"
+	echo -e "\tExample: https://ipfs.io/ipfs/:hash"
 	echo ""
 	echo "Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown"
 	echo "License: MIT"
@@ -90,10 +98,10 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-VERSION="1.1.2"
+VERSION="1.1.3"
 DATE="10-2017"
 
-UPDV="1.12"
+UPDV="1.13"
 
 RL_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/gateways.json"
 WB_PATH="https://raw.githubusercontent.com/ipfs/public-gateway-checker/master/lastpubver"
@@ -129,7 +137,10 @@ if ! [[ -f "$HASH_PATH" ]] ; then
 fi
 
 ADD=false
+COMPARE=false
 DELETE=false
+ADDED=false
+REMOVED=false
 LIST=false
 RAW=false
 LIST_REMOTE=false
@@ -137,6 +148,8 @@ LIST_LOCAL=false
 MANUAL=false
 REMOTE=false
 LOCAL=false
+WPRINT=true
+LPRINT=true
 
 if [[ "$@" == "" ]] ; then
 	REMOTE=true
@@ -154,11 +167,40 @@ else
 					ADD=true
 					DELETE=false
 					;;
+				-c|--compare)
+					COMPARE=true
+					;;
 				-d|--delete)
 					DELETE=true
 					ADD=false
 					;;
-				-h|-\?|--help)
+				-h|--hash|--hashes)
+					WEB_HASH=$(curl --silent "$WB_PATH")
+					if [[ $WEB_HASH == "" ]] ; then
+						WEB_HASH="n/a"
+						WPRINT=false
+					fi
+					LOCAL_HASH=$(cat "$HASH_PATH" 2>/dev/null | sed -e '/^$/d')
+					if [[ $LOCAL_HASH == "" ]] ; then
+						LOCAL_HASH="n/a"
+						LPRINT=false
+					fi
+					if ! $WPRINT && ! $LPRINT ; then
+						echoerr "No hashes available. Please try again later."
+						exit 1
+					else
+						echo -e "IPFS hash (current):\t$WEB_HASH"
+						echo -e "IPFS hash (backup):\t$LOCAL_HASH"
+						if [[ $LOCAL_HASH != $WEB_HASH ]] ; then
+							echoerr "Attention: a new web version was published."
+							backup-hash
+						else
+							echoerr "No recent changes."
+						fi
+					fi
+					exit 0
+					;;
+				-H|-\?|--help|--Help)
 					usage
 					exit 0
 					;;
@@ -193,7 +235,7 @@ else
 					REMOTE=true
 					MANUAL=false
 					;;
-				-s|--save|--backup)
+				-s|--save)
 					shift
 					if [[ $1 == "url" ]] ; then
 						backup-remote
@@ -291,6 +333,58 @@ if $ADD ; then
 				fi
 			fi
 		done
+	fi
+	exit 0
+fi
+
+if $COMPARE ; then
+	RGATEWAYS=$(curl --silent "$RL_PATH" | sed -e '$ d' -e '1,1d' -e '/^$/d' -e 's/\"//g' -e 's/,$//g' | sort)
+	if [[ $RGATEWAYS == "" ]] ; then
+		echoerr "Error: no access to remote list. Please try again later."
+		exit 1
+	else
+		REMOTELIST=$(while read -r GWURL
+			do
+				GWURL=$(echo "$GWURL" | xargs)
+				echo "$GWURL"
+			done < <(echo "$RGATEWAYS")
+			)
+	fi
+	SAVELIST=$(cat "$RLB_PATH" | sed -e '/^$/d' | sort)
+	if [[ $SAVELIST == "" ]] ; then
+		echoerr "Error: no local backup available."
+		exit 1
+	fi
+	NEWGWS=$(comm -23 <(echo "$REMOTELIST") <(echo "$SAVELIST"))
+	if [[ $NEWGWS == "" ]] ; then
+		ADDED=false
+	else
+		ADDED=true
+	fi
+	DELGWS=$(comm -13 <(echo "$REMOTELIST") <(echo "$SAVELIST"))
+	if [[ $DELGWS == "" ]] ; then
+		REMOVED=false
+	else
+		REMOVED=true
+	fi
+	if ! $ADDED && ! $REMOVED ; then
+		echoerr "No changes to remote gateway list."
+		exit 0
+	else
+		echoerr "Changes to remote gateway list:"
+		if $ADDED ; then
+			while read -r NEWGW
+			do
+				echo -e "${GREEN}ADDED${NC}\t$NEWGW"
+			done < <(echo "$NEWGWS")
+		fi
+		if $REMOVED ; then
+			while read -r DELGW
+			do
+				echo -e "${RED}REMOVED${NC}\t$DELGW"
+			done < <(echo "$DELGWS")
+		fi
+		backup-remote
 	fi
 	exit 0
 fi

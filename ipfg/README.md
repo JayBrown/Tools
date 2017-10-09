@@ -4,7 +4,7 @@
 
 # Command Line Tools: ipfg <img src="https://github.com/JayBrown/Tools/blob/master/img/jb-img.png" height="20px"/>
 ```
-ipfg 1.1.2 (10-2017)
+ipfg 1.1.3 (10-2017)
 IPFS public gateway checker (extended cli version)
 
 Running ipfg without an option will check the online status of all available IPFS gateways.
@@ -12,16 +12,22 @@ When using multiple options, only the final option will be recognized.
 
 OPTIONS:
 	-a | --add <URL>
-		Add specified gateway URLs to local list (format: http[s]://<domain>.<tld>/ipfs/:hash)
+		Add specified gateway URLs to local list
+
+	-c | --compare
+		Check remote gateway list for changes incl. auto-backup
 
 	-d | --delete [<URL> | all]
-		Delete specified or all gateway URLs from local list (format: see above)
+		Delete specified or all gateway URLs from local list
 
-	-h | --help
+	-h | --hash
+		Print current and saved IPFS hashes incl. auto-backup
+
+	-H | --help
 		This help page
 
 	-l | --list [raw] [all | local | remote]
-		Display listed gateways as domains or raw URLs
+		Display listed gateways as domains or raw URL
 
 	-L | --local
 		Only check gateways on local list
@@ -32,18 +38,22 @@ OPTIONS:
 	-R | --remote
 		Only check gateways on remote list
 
-	-s | --save | --backup [all | hash | url]
-		Save remote data to local backup files
+	-s | --save [all | hash | url]
+		Manually save remote data to local backup files
 
 	-V | --version
 		Print version number (incl. update check)
 
 	-w | --web
-		Open web version of the IPFS public gateway checker
+		Open web-based version of the IPFS public gateway checker
+
+FORMAT:
+	http[s]://<domain>.<tld>/ipfs/:hash
+	Example: https://ipfs.io/ipfs/:hash
 
 Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown
 License: MIT
 
 Inspired by the original web-based IPFS Public Gateway Checker
 https://github.com/ipfs/public-gateway-checker
-``
+```
