@@ -58,15 +58,17 @@ GATEWAY URL FORMAT:
 
 EXAMPLES:
 	ipfg
-	ipfg raw
-	ipfg -l remote
-	ipfg -l raw local
-	ipfg -a https://mygateway.com/ipfs/:hash
-	ipfg -d https://mygateway.com/ipfs/:hash
-	ipfg -L
 	ipfg -M https://ipfs.io/ipfs/:hash
+	ipfg -l remote
 	ipfg -R raw
+	ipfg -a https://mygateway.com/ipfs/:hash
+	ipfg -l raw local
+	ipfg -L
+	ipfg raw
+	ipfg -d https://mygateway.com/ipfs/:hash
 	ipfg -u local https://ipfs.io/ipfs/"$(echo 'This is an ipfg cache run.' | ipfs add -Q)"
 
 Copyright 2017 by Joss Brown (pseud.): https://github.com/JayBrown (License: MIT)
+
+See also the web-based IPFS gateway checker: https://github.com/ipfs/public-gateway-checker
 ```
