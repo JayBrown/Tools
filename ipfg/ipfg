@@ -571,8 +571,9 @@ if $CACHE ; then
 		CACHE_URL="$1"
 	fi
 	echoerr "Please wait... attempting to cache $TEMPNAME on $CDOMAIN"
+	echoerr "Connect timeout: 60 seconds"
 	echoerr ""
-	curl -o /dev/null "$CACHE_URL"
+	curl -o /dev/null --connect-timeout 60 "$CACHE_URL"
 	echoerr ""
 	echoerr "Done."
 	exit 0
