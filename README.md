@@ -13,4 +13,5 @@
 * **adler32**: calculate the Adler32 hash for a specified file
 * **dies**: convert English to Latin weekday names
 * **ipfg**: check online status of IPFS public gateways
+* **merge**: merge two or directories or files into one master directory
 * various **shell aliases**

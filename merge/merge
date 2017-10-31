@@ -1,0 +1,252 @@
+#!/bin/bash
+
+# merge v1.0
+# Copyright 2017 Joss Brown (pseud.)
+# https://github.com/JayBrown
+# License: MIT
+
+export PATH=$PATH:/usr/local/bin
+
+version="1.0"
+
+flatten=false
+dedupe=false
+
+if [[ $1 == "flatten" ]] ; then
+	flatten=true
+	shift
+elif [[ $1 == "deduplicate" ]] ; then
+	dedupe=true
+	if [[ $(command -V fdupes | grep "fdupes not found") != "" ]] ; then
+		echo "Error: the deduplicate option needs fdupes to be installed and in your \$PATH." >&2
+		exit
+	else
+		shift
+	fi
+fi
+
+if [[ $1 == "" ]] || [[ $1 == "flatten" ]] || [[ $1 == "deduplicate" ]] || [[ $1 == "help" ]] ; then
+	echo "merge v$version"
+	echo ""
+	echo "merge <dir 1> ... <dir n> <file 1> ... <file n>"
+	echo -e "\tMerges directory contents or files into \"Merged Folder\" and retains the directory structures"
+	echo ""
+	echo "merge deduplicate <dir 1> ... <dir n> <file 1> ... <file n>"
+	echo -e "\tRetains directory structures, but deletes all duplicate files"
+	echo -e "\tNote: one file per duplicate list is moved to the \"_saved\" directory"
+	echo -e "\tNote: deduplication is based on checksums, not filenames"
+	echo ""
+	echo "merge flatten <dir 1> ... <dir n> <file 1> ... <file n>"
+	echo -e "\tMoves all files to the root of the merge directory and deletes all duplicates"
+	echo -e "\tNote: flatten does not work together with deduplicate"
+	echo ""
+	echo "NOTES:"
+	echo -e "\tSpecifying only one file path will only work if the directory \"Merged Folder\" already exists"
+	echo -e "\tmerge will use the parent directory of the first specified path as its working directory"
+	exit
+fi
+
+parent=$(dirname "$1")
+account=$(id -un)
+if ! [[ -w $parent ]] ; then
+	echo "Error: working directory is not writable for: $account" >&2
+	exit
+fi
+merger="$parent/Merged Folder"
+
+if [[ $2 == "" ]] && ! [[ -d $merger ]] ; then
+	echo "Error: only one path specified." >&2
+	exit
+fi
+
+for object in "$@"
+do
+	if ! [[ -e $object ]] ; then
+		echo "Error: file does not exist: $object" >&2
+		exit
+	fi
+done
+
+! [[ -d $merger ]] && mkdir "$merger"
+
+if $flatten ; then
+	echo "merge will flatten the directory structure."
+else
+	echo "merge will retain the directory structure."
+	if $dedupe ; then
+		echo "merge will deduplicate the directory contents."
+	else
+		echo "merge will not deduplicate the directory contents."
+	fi
+fi
+echo ""
+
+for object in "$@"
+do
+	if [[ -d "$object" ]] ; then
+		cd "$object"
+		if $flatten ; then
+			object_list=$(find . -type f -mindepth 1 | sed "s/^\.\///g")
+		else
+			object_list=$(find . -mindepth 1 | sed "s/^\.\///g")
+		fi
+		cd /
+		while read -r file
+		do
+			filepath="$object/$file"
+			oname=$(basename "$filepath")
+			[[ $oname == ".DS_Store" ]] && continue
+			if [[ -d $filepath ]] ; then
+				$flatten && continue
+				echo "Accessing: $filepath"
+				if [[ -d $merger/$file ]] ; then
+					echo "Note: same directory already exists: $merger/$file"
+				else
+					echo "Creating directory: $merger/$file"
+					mkdir -p "$merger/$file"
+				fi
+			else
+				echo "Accessing: $filepath"
+				if ! $flatten ; then
+					if ! [[ -e "$merger/$file" ]] ; then
+						echo "Moving file: $filepath"
+						mv "$filepath" "$merger/$file"
+					else
+						targethash=$(crc32 "$merger/$file")
+						sourcehash=$(crc32 "$filepath")
+						if [[ $targethash == $sourcehash ]] ; then
+							echo "Note: same file already exists: $merger/$file [$targethash]"
+						else
+							echo "Note: different file with same filename exists: $merger/$file"
+							parentdir=$(dirname "$merger/$file")
+							bkdir="$parentdir/$oname $sourcehash"
+							if ! [[ -d $bkdir ]] ; then
+								mkdir "$bkdir"
+								echo "Moving file: $filepath"
+								mv "$filepath" "$bkdir/$oname"
+							else
+								echo "Note: backup object already exists: $bkdir"
+							fi
+						fi
+					fi
+				else
+					if ! [[ -e "$merger/$oname" ]] ; then
+						echo "Moving file: $filepath"
+						mv "$filepath" "$merger/$oname"
+					else
+						targethash=$(crc32 "$merger/$oname")
+						sourcehash=$(crc32 "$filepath")
+						if [[ $targethash == $sourcehash ]] ; then
+							echo "Note: same file already exists: $merger/$file [$targethash]"
+						else
+							echo "Note: different file with same filename exists: $merger/$oname"
+							bkdir="$merger/$oname $sourcehash"
+							if ! [[ -d $bkdir ]] ; then
+								mkdir "$bkdir"
+								echo "Moving file: $filepath"
+								mv "$filepath" "$bkdir/$oname"
+							else
+								echo "Note: backup object already exists: $bkdir"
+							fi
+						fi
+					fi
+				fi
+			fi
+			echo ""
+		done < <(echo "$object_list")
+		rm -rf "$object" 2>/dev/null
+	else
+		echo "Accessing: $object"
+		oname=$(basename "$object")
+		if ! [[ -e "$merger/$oname" ]] ; then
+			echo "Moving file: $object"
+			mv "$object" "$merger/$oname"
+		else
+			targethash=$(crc32 "$merger/$oname")
+			sourcehash=$(crc32 "$object")
+			if [[ $targethash == $sourcehash ]] ; then
+				echo "Note: same file already exists: $oname [$targethash]"
+				rm -f "$object" 2>/dev/null
+			else
+				echo "Note: different file with same filename exists: $oname"
+				bkdir="$merger/$oname $sourcehash"
+				if ! [[ -d $bkdir ]] ; then
+					mkdir "$bkdir"
+					echo "Moving file: $object"
+					mv "$object" "$bkdir/$oname"
+				else
+					echo "Note: backup object already exists: $bkdir"
+					rm -f "$object" 2>/dev/null
+				fi
+			fi
+		fi
+		echo ""
+	fi
+done
+
+if [[ -z $(ls -A "$merger" 2>/dev/null) ]] ; then
+	echo "Merge directory is empty: nothing happened."
+	$dedupe && echo "merge will not deduplicate."
+	rm -rf "$merger" 2>/dev/null && echo "Merge directory removed." || echo "Error: couldn't remove merge directory." >&2
+	echo ""
+else
+	if $dedupe ; then
+		echo "Please wait: scanning for duplicate files..."
+		echo ""
+		cd "$merger"
+		newlist=$(find . -type f -mindepth 1 | sed 's/^\.\///g')
+		ddlist=$(while read -r tohash
+		do
+			hash=$(crc32 "./$tohash")
+			echo "$hash $tohash"
+		done < <(echo "$newlist") \
+			| sort -k1)
+		cd /
+		uqlist=$(echo "$ddlist" | awk '{print $1}' | uniq -d)
+		if [[ $uqlist == "" ]] ; then
+			echo "No duplicates found."
+			echo ""
+		else
+			dupedir="$merger/_saved"
+			! [[ -d "$dupedir" ]] && mkdir "$dupedir"
+			while read -r dupe
+			do
+				dddel_list=$(echo "$ddlist" | grep "$dupe")
+				echo "$dddel_list"
+				if [[ $(echo "$dddel_list" | grep "_saved/") != "" ]] ; then
+					echo "Duplicate file already present in '_saved' directory."
+					dddel_list=$(echo "$dddel_list" | grep -v "_saved")
+				else
+					mvline=$(echo "$dddel_list" | head -1)
+					mvfile=$(echo "$mvline" | awk '{print substr($0, index($0,$2))}')
+					mvhash=$(echo "$mvline" | awk '{print $1}')
+					dddel_list=$(echo "$dddel_list" | grep -v "^$mvhash $mvfile$")
+					mvname=$(basename "$merger/$mvfile")
+					if [[ -f "$dupedir/$mvname" ]] ; then
+						echo "File with same filename but different hash present in '_saved' directory."
+						mkdir "$mergger/$dupedir/$mvname $mvhash"
+						mv "$merger/$mvfile" "$dupedir/$mvname $mvhash/$mvname"
+					else
+						mv "$merger/$mvfile" "$dupedir/$mvname"
+					fi
+					echo "Moved to '_saved' directory: $merger/$mvfile"
+				fi
+				dddel_list=$(echo "$dddel_list" | grep -v "^$")
+				while read -r deldupe
+				do
+					dfile=$(echo "$deldupe" | awk '{print substr($0, index($0,$2))}')
+					dpath="$merger/$dfile"
+					dname=$(basename "$dpath")
+					rm -f "$dpath" 2>/dev/null && \
+						echo "Deleted: $dpath" || \
+						echo "Error: could not delete: $dpath" >&2
+				done < <(echo "$dddel_list")
+				echo ""
+			done < <(echo "$uqlist")
+		fi
+	fi
+fi
+
+echo "Done."
+
+exit
