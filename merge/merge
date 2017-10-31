@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# merge v1.0.1
+# merge v1.0.2
 # Copyright 2017 Joss Brown (pseud.)
 # https://github.com/JayBrown
 # License: MIT
 
 export PATH=$PATH:/usr/local/bin
 
-version="1.0.1"
+version="1.0.2"
 
 flatten=false
 dedupe=false
@@ -33,7 +33,7 @@ if [[ $1 == "" ]] || [[ $1 == "flatten" ]] || [[ $1 == "deduplicate" ]] || [[ $1
 	echo ""
 	echo "merge flatten <dir 1> ... <dir n> <file 1> ... <file n>"
 	echo -e "\tMoves all files to the root of the merge directory and deletes all duplicates"
-	echo -e "\tNote: flatten does not work together with deduplicate"
+	echo -e "\tNote: flatten includes automatic deduplication"
 	echo ""
 	echo "GENERAL NOTES:"
 	echo -e "\tSpecifying only one file path will only work if the directory \"Merged Folder\" already exists"
@@ -66,6 +66,7 @@ done
 
 if $flatten ; then
 	echo "merge will flatten the directory structure."
+	echo "merge will deduplicate the directory contents."
 else
 	echo "merge will retain the directory structure."
 	if $dedupe ; then
@@ -185,7 +186,7 @@ if [[ -z $(ls -A "$merger" 2>/dev/null) ]] ; then
 	rm -rf "$merger" 2>/dev/null && echo "Merge directory removed." || echo "Error: couldn't remove merge directory." >&2
 	echo ""
 else
-	if $dedupe ; then
+	if $dedupe || $flatten ; then
 		echo "Please wait: scanning for duplicate files..."
 		echo ""
 		cd "$merger"
