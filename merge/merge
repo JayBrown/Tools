@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# merge v1.0
+# merge v1.0.1
 # Copyright 2017 Joss Brown (pseud.)
 # https://github.com/JayBrown
 # License: MIT
 
 export PATH=$PATH:/usr/local/bin
 
-version="1.0"
+version="1.0.1"
 
 flatten=false
 dedupe=false
@@ -17,12 +17,7 @@ if [[ $1 == "flatten" ]] ; then
 	shift
 elif [[ $1 == "deduplicate" ]] ; then
 	dedupe=true
-	if [[ $(command -V fdupes | grep "fdupes not found") != "" ]] ; then
-		echo "Error: the deduplicate option needs fdupes to be installed and in your \$PATH." >&2
-		exit
-	else
-		shift
-	fi
+	shift
 fi
 
 if [[ $1 == "" ]] || [[ $1 == "flatten" ]] || [[ $1 == "deduplicate" ]] || [[ $1 == "help" ]] ; then
@@ -40,7 +35,7 @@ if [[ $1 == "" ]] || [[ $1 == "flatten" ]] || [[ $1 == "deduplicate" ]] || [[ $1
 	echo -e "\tMoves all files to the root of the merge directory and deletes all duplicates"
 	echo -e "\tNote: flatten does not work together with deduplicate"
 	echo ""
-	echo "NOTES:"
+	echo "GENERAL NOTES:"
 	echo -e "\tSpecifying only one file path will only work if the directory \"Merged Folder\" already exists"
 	echo -e "\tmerge will use the parent directory of the first specified path as its working directory"
 	exit
